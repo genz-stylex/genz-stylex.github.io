@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>StyleX — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --accent:#EF5A28;
+    --accent-light:#FDEDE7;
+    --black:#111111;
+    --text:#1f2124;
+    --muted:#8a8f98;
+    --border:#e7e8eb;
+    --bg:#f6f7f9;
+    --white:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:13px;}
+  body{
+    font-family:"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:12.5px;
+    overflow-x:hidden;
+  }
+  a{text-decoration:none;color:inherit;}
+
+  /* ===== Top bar ===== */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--white);
+    border-bottom:1px solid var(--border);
+    padding:9px 18px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .topbar-left{display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:6px;font-weight:800;font-size:16px;letter-spacing:.2px;}
+  .brand .icon-box{
+    width:26px;height:26px;border-radius:7px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;
+  }
+  .brand span.dark{color:var(--black);}
+  .brand span.accent{color:var(--accent);}
+  .login-brand span.accent, .brand span.accent{color:var(--accent);}
+  .login-brand span.dark, .brand span.dark{
+    color:var(--black);
+    font-style:italic;
+    margin-left:1px;
+  }
+  .topnav{display:flex;gap:18px;font-weight:600;font-size:11.5px;color:#26282b;}
+  .topnav a:hover{color:var(--accent);}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .search-input{
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:6px 10px;
+    width:170px;
+    font-size:11.5px;
+    outline:none;
+  }
+  .search-input:focus{border-color:var(--accent);}
+  .btn-search{
+    background:var(--black);
+    color:#fff;
+    border:none;
+    padding:7px 13px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:11.5px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:5px;
+  }
+  .btn-search:hover{background:#000;}
+  .btn-outline{
+    border:1px solid var(--accent);
+    color:var(--accent);
+    background:#fff;
+    padding:6px 14px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:10.5px;
+    letter-spacing:.5px;
+    cursor:pointer;
+  }
+  .btn-outline:hover{background:var(--accent-light);}
+
+  /* ===== Layout ===== */
+  .layout{display:flex;min-height:calc(100vh - 46px);}
+
+  /* ===== Sidebar ===== */
+  .sidebar{
+    width:190px;
+    background:var(--white);
+    border-right:1px solid var(--border);
+    padding:12px 0;
+    flex-shrink:0;
+  }
+  .profile{
+    display:flex;align-items:center;gap:8px;
+    padding:0 14px 12px 14px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:6px;
+  }
+  .avatar{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:11px;flex-shrink:0;
+  }
+  .profile-name{font-weight:700;font-size:11.5px;flex:1;}
+  .collapse-btn{
+    width:18px;height:18px;border-radius:50%;
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:10px;cursor:pointer;background:#fff;
+  }
+
+  .nav-section{padding:3px 0;}
+  .nav-label{
+    font-size:9.5px;font-weight:700;color:#a7abb3;
+    letter-spacing:.6px;padding:10px 14px 4px 14px;
+    text-transform:uppercase;
+  }
+  .nav-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:7px 14px;
+    font-weight:600;color:#4a4d52;
+    cursor:pointer;
+    border-left:3px solid transparent;
+    font-size:12px;
+  }
+  .nav-item .left{display:flex;align-items:center;gap:8px;}
+  .nav-item .ic{width:14px;text-align:center;color:#9a9ea5;font-size:12px;}
+  .nav-item:hover{background:#fafafa;color:var(--black);}
+  .nav-item.active{
+    background:var(--accent-light);
+    color:var(--accent);
+    border-left-color:var(--accent);
+    font-weight:700;
+  }
+  .nav-item.active .ic{color:var(--accent);}
+  .chevron{font-size:10px;color:#c2c5ca;transition:transform .15s;}
+  .chevron.open{transform:rotate(90deg);}
+  .nav-sub .left{padding-left:22px;}
+
+  /* ===== Main ===== */
+  .main{flex:1;padding:14px 18px;min-width:0;}
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:9px;
+  }
+  .breadcrumb-card{
+    padding:10px 16px;
+    margin-bottom:14px;
+    border-left:3px solid var(--accent);
+    position:relative;
+  }
+  .crumb{font-size:10.5px;color:var(--muted);margin-bottom:4px;}
+  .crumb a{color:#6c8bd6;}
+  .crumb .sep{margin:0 5px;color:#c8cad0;}
+  .crumb .current{color:#20222a;}
+  .page-title{font-size:16px;font-weight:800;}
+
+  .stat-card{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .stat-icon{
+    width:36px;height:36px;border-radius:9px;
+    background:var(--accent-light);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .stat-number{font-size:20px;font-weight:800;line-height:1;}
+  .stat-label{font-size:10.5px;color:var(--muted);margin-top:3px;}
+
+  .export-card{padding:16px;}
+  .export-title{font-weight:800;font-size:13px;margin-bottom:12px;}
+  .export-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:9.5px;font-weight:700;color:#9a9ea5;letter-spacing:.4px;}
+  .field input{
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:7px 10px;
+    font-size:11.5px;
+    width:140px;
+    outline:none;
+    color:var(--text);
+  }
+  .field input:focus{border-color:var(--accent);}
+  .btn-download{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 16px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:11.5px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    height:32px;
+  }
+  .btn-download:hover{background:#d94e1e;}
+
+  /* ===== Login screen ===== */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--bg);
+    padding:20px;
+  }
+  .login-card{
+    width:100%;
+    max-width:360px;
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:34px 30px;
+    box-shadow:0 10px 30px rgba(20,20,20,.06);
+  }
+  .login-brand{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    font-weight:800;font-size:19px;margin-bottom:6px;
+  }
+  .login-sub{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:26px;
+  }
+  .login-field{margin-bottom:16px;}
+  .login-field label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    color:#6b6f76;
+    letter-spacing:.3px;
+    margin-bottom:6px;
+  }
+  .login-field input{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:10px 12px;
+    font-size:13px;
+    outline:none;
+    color:var(--text);
+  }
+  .login-field input:focus{border-color:var(--accent);}
+  .login-field input.input-error{border-color:#e0453a;background:#fff8f7;}
+  .field-error{
+    display:none;
+    color:#c0392b;
+    font-size:10.5px;
+    font-weight:600;
+    margin-top:5px;
+  }
+  .field-error.show{display:block;}
+  .login-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+    font-size:11.5px;
+  }
+  .login-row label{
+    display:flex;align-items:center;gap:6px;color:#6b6f76;font-weight:600;cursor:pointer;
+  }
+  .login-row a{color:var(--accent);font-weight:700;}
+  .btn-login{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:11px 16px;
+    border-radius:7px;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .btn-login:hover{background:#d94e1e;}
+  .login-error{
+    display:none;
+    background:#fdecea;
+    color:#c0392b;
+    border:1px solid #f5c6c2;
+    border-radius:7px;
+    padding:9px 12px;
+    font-size:11.5px;
+    margin-bottom:16px;
+  }
+  .login-error.show{display:block;}
+  .login-hint{
+    text-align:center;
+    margin-top:22px;
+    font-size:11px;
+    color:#b0b3b9;
+  }
+  #app{display:none;}
+  .logout-link{
+    margin-left:auto;
+    font-size:11px;
+    font-weight:700;
+    color:var(--muted);
+    cursor:pointer;
+    padding:5px 10px;
+    border-radius:6px;
+  }
+  .logout-link:hover{background:var(--accent-light);color:var(--accent);}
+
+  /* ===== Styles page ===== */
+  .page-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;margin-bottom:14px;flex-wrap:wrap;gap:10px;
+  }
+  .page-header h1{font-size:18px;font-weight:800;}
+  .page-header-actions{display:flex;gap:10px;}
+  .btn-accent{
+    background:var(--accent);color:#fff;border:none;
+    padding:9px 16px;border-radius:6px;font-weight:700;font-size:12px;
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .btn-accent:hover{background:#d94e1e;}
+  .btn-dark-outline{
+    background:#fff;color:var(--text);border:1px solid var(--border);
+    padding:9px 16px;border-radius:6px;font-weight:700;font-size:12px;
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .btn-dark-outline:hover{background:#f5f5f5;}
+
+  .search-card{padding:16px;margin-bottom:14px;}
+  .search-card h3{font-size:13px;font-weight:800;margin-bottom:10px;}
+  .search-card label{font-size:9.5px;font-weight:700;color:#9a9ea5;letter-spacing:.4px;display:block;margin-bottom:5px;}
+  .search-card input{
+    border:1px solid var(--border);border-radius:6px;padding:8px 12px;
+    font-size:12px;width:260px;outline:none;
+  }
+  .search-card input:focus{border-color:var(--accent);}
+
+  .table-card{padding:16px;}
+  .table-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
+  .table-card-head h3{font-size:13px;font-weight:800;}
+  .show-entries{display:flex;align-items:center;gap:8px;font-size:11px;color:#6b6f76;}
+  .show-entries select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11.5px;}
+
+  table.styles-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  table.styles-table thead th{
+    text-align:left;font-size:9.5px;font-weight:700;color:#9a9ea5;
+    letter-spacing:.4px;text-transform:uppercase;
+    padding:10px 8px;border-bottom:1px solid var(--border);
+  }
+  table.styles-table tbody td{
+    padding:12px 8px;border-bottom:1px solid var(--border);vertical-align:top;
+  }
+  .style-cell .snum{font-weight:700;color:#1f2124;}
+  .style-cell .cat{color:#4a7fd6;font-weight:600;display:block;margin-top:2px;}
+  .style-cell .meta{color:#6b6f76;display:block;margin-top:2px;}
+  .style-cell .status-active{color:#1f9254;font-weight:700;display:block;margin-top:4px;}
+  .style-cell .status-inactive{color:#c0392b;font-weight:700;display:block;margin-top:4px;}
+  .style-img{
+    width:70px;height:88px;border-radius:6px;object-fit:cover;background:#eee;
+    display:flex;align-items:center;justify-content:center;color:#b5b8bd;font-size:10px;text-align:center;
+  }
+  .fabric-cell{max-width:150px;}
+  .action-cell{display:flex;flex-direction:column;gap:6px;min-width:100px;}
+  .act-btn{
+    border:none;border-radius:5px;padding:5px 8px;font-size:10.5px;font-weight:700;
+    cursor:pointer;text-align:center;
+  }
+  .act-edit{background:#e7f0fd;color:#3667c9;}
+  .act-cost{background:#e6f7ef;color:#1f9254;}
+  .act-detail{background:#fdf2e3;color:#b9791f;}
+  .act-images{background:#e6f7ef;color:#1f9254;}
+  .act-videos{background:#e6f7ef;color:#1f9254;}
+  .act-styledetail{background:#e6f7ef;color:#1f9254;}
+  .act-inventory{background:#eef1fd;color:#4a4dc9;}
+  .act-bom{background:#fff4e0;color:#b3720c;}
+  .act-delete{background:#fdecea;color:#c0392b;}
+  .qty-cell{display:flex;flex-direction:column;gap:2px;font-weight:600;color:#4a4d52;}
+  .empty-row td{text-align:center;color:var(--muted);padding:26px;}
+
+  /* Modal */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,20,20,.45);
+    align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff;border-radius:12px;width:100%;max-width:520px;
+    max-height:88vh;overflow-y:auto;padding:22px 24px;
+  }
+  .modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-field{display:flex;flex-direction:column;gap:5px;}
+  .form-field.full{grid-column:1/-1;}
+  .form-field label{font-size:10.5px;font-weight:700;color:#6b6f76;letter-spacing:.3px;}
+  .form-field input,.form-field select,.form-field textarea{
+    border:1px solid var(--border);border-radius:6px;padding:8px 10px;
+    font-size:12px;outline:none;color:var(--text);font-family:inherit;
+  }
+  .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--accent);}
+  .form-field .req-error{display:none;color:#c0392b;font-size:10px;font-weight:600;}
+  .form-field .req-error.show{display:block;}
+  .form-field input.input-error{border-color:#e0453a;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+  .btn-cancel{
+    background:#fff;border:1px solid var(--border);color:#4a4d52;
+    padding:9px 18px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;
+  }
+  .btn-cancel:hover{background:#f5f5f5;}
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:#1f2124;color:#fff;padding:10px 18px;border-radius:8px;
+    font-size:12px;font-weight:600;z-index:200;display:none;
+  }
+  .toast.show{display:block;}
+  #dashboardView, #stylesView, #samplesView, #costSheetView, #bomView, #bomDetailView, #masterView, #returnDetailView, #ticketMgmtView{display:none;}
+  #dashboardView.active, #stylesView.active, #samplesView.active, #costSheetView.active, #bomView.active, #bomDetailView.active, #masterView.active, #returnDetailView.active, #ticketMgmtView.active{display:block;}
+  .bom-cell-input{border:1px solid var(--border);border-radius:5px;padding:5px 7px;font-size:11px;font-family:inherit;width:100%;min-width:70px;}
+  .test-banner{background:#1f2124;color:#fff;text-align:center;padding:8px;font-weight:700;font-size:11.5px;}
+  .test-banner span{color:#ffb199;}
+  .bom-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;}
+  .bom-row input{border:1px solid var(--border);border-radius:6px;padding:7px 8px;font-size:11.5px;font-family:inherit;width:100%;}
+  .bom-row .bom-remove{background:#fdecea;color:#c0392b;border:none;border-radius:6px;padding:7px 9px;font-weight:700;cursor:pointer;}
+  .bom-row-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;font-size:9.5px;font-weight:700;color:#9a9ea5;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+  <!-- Login screen -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-brand"><span class="accent">STYLE</span><span class="dark">X</span></div>
+      <div class="login-sub">Log in to your dashboard</div>
+
+      <div class="login-error" id="loginError">Incorrect username or password.</div>
+
+      <form id="loginForm" novalidate>
+        <div class="login-field">
+          <label>USERNAME</label>
+          <input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username">
+          <div class="field-error" id="usernameError">Username is required.</div>
+        </div>
+        <div class="login-field">
+          <label>PASSWORD</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+          <div class="field-error" id="passwordError">Password is required.</div>
+        </div>
+        <div class="login-row">
+          <label><input type="checkbox" style="width:auto;"> Remember me</label>
+          <a href="#">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn-login">Log In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard app -->
+  <div id="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand">
+        <div class="icon-box">👕</div>
+        <span class="accent">STYLE</span><span class="dark">X</span>
+      </div>
+      <div class="topnav">
+        <a href="#">Search, filter and export</a>
+        <a href="#">Export by style number</a>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <input class="search-input" type="text" placeholder="Style number...">
+      <button class="btn-search">🔍 Search</button>
+      <button class="btn-outline">DASHBOARD</button>
+      <div class="logout-link" id="logoutBtn">Log out</div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="profile">
+        <div class="avatar">VP</div>
+        <div class="profile-name">Vikas Pal</div>
+        <div class="collapse-btn">‹</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-item active" id="navDashboard"><div class="left"><span class="ic">🏠</span> Dashboard</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">🏆</span> Leaderboard</div></div>
+        <div class="nav-item" id="navStyles"><div class="left"><span class="ic">👔</span> Styles</div></div>
+        <div class="nav-item" id="navCostSheet"><div class="left"><span class="ic">💰</span> Cost Sheet</div></div>
+        <div class="nav-item" id="navBom"><div class="left"><span class="ic">📋</span> BOM</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">👤</span> Buying Tracker</div><span class="chevron">›</span></div>
+        <div class="nav-item" id="navSamples"><div class="left"><span class="ic">📊</span> Request Samples</div></div>
+      </div>
+
+      <div class="nav-label" id="navMastersToggle" style="cursor:pointer;">Masters <span class="chevron" id="mastersChevron" style="float:right;margin-right:18px;">›</span></div>
+      <div class="nav-section" id="mastersSubmenu" style="display:none;">
+        <div class="nav-item master-nav" data-master="color"><div class="left"><span class="ic">🎨</span> Color</div></div>
+        <div class="nav-item master-nav" data-master="fabric"><div class="left"><span class="ic">🧵</span> Fabric</div></div>
+        <div class="nav-item master-nav" data-master="size"><div class="left"><span class="ic">📏</span> Size</div></div>
+        <div class="nav-item master-nav" data-master="unit"><div class="left"><span class="ic">⚖️</span> Unit</div></div>
+        <div class="nav-item master-nav" data-master="itemcategory"><div class="left"><span class="ic">🏷️</span> Item Category</div></div>
+      </div>
+
+      <div class="nav-label">Supply Chain</div>
+      <div class="nav-section">
+        <div class="nav-item"><div class="left"><span class="ic">📋</span> Planning</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">⏳</span> Ageing Dashboard</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">✂️</span> Cutting Chart Status</div></div>
+      </div>
+
+      <div class="nav-label">B2B <span class="chevron" style="float:right;margin-right:18px;">›</span></div>
+
+      <div class="nav-label">Ecom</div>
+      <div class="nav-section">
+        <div class="nav-item"><div class="left"><span class="ic">📈</span> Style Analytics</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">📚</span> Cataloguing</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">🔄</span> Myntra Stats</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">💹</span> PnL</div></div>
+        <div class="nav-item"><div class="left"><span class="ic">🔁</span> Replen</div><span class="chevron">›</span></div>
+        <div class="nav-item" id="navReturnMgmtToggle" style="cursor:pointer;">
+          <div class="left"><span class="ic">↩️</span> Return Management</div>
+          <span class="chevron" id="returnMgmtChevron">›</span>
+        </div>
+        <div id="returnMgmtSubmenu" style="display:none;">
+          <div class="nav-item nav-sub return-nav" data-return="myntra-bad" data-title="Myntra Bad Return"><div class="left">Myntra - Bad Return</div></div>
+          <div class="nav-item nav-sub return-nav" data-return="myntra-nrn" data-title="Myntra Return Not Received"><div class="left">Myntra - Return Not Received</div></div>
+          <div class="nav-item nav-sub"><div class="left">Ajio - Bad Return</div></div>
+          <div class="nav-item nav-sub"><div class="left">Ajio - Return Not Received</div></div>
+          <div class="nav-item nav-sub"><div class="left">Nykaa - Bad Return</div></div>
+          <div class="nav-item nav-sub"><div class="left">Nykaa - Return Not Received</div></div>
+          <div class="nav-item nav-sub"><div class="left">Flipkart - Bad Return</div></div>
+          <div class="nav-item nav-sub"><div class="left">Flipkart - Return Not Received</div></div>
+          <div class="nav-item nav-sub"><div class="left">Return Reason</div></div>
+          <div class="nav-item nav-sub"><div class="left">Exchange Reason</div></div>
+          <div class="nav-item nav-sub"><div class="left">Status Wise Return</div></div>
+        </div>
+        <div class="nav-item" id="navTicketMgmt"><div class="left"><span class="ic">🎫</span> Ticket Management</div></div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main">
+
+      <!-- Dashboard View -->
+      <div id="dashboardView" class="active">
+        <div class="card breadcrumb-card">
+          <div class="crumb">
+            <a href="#">Home</a><span class="sep">›</span><span class="current">Dashboard</span>
+          </div>
+          <div class="page-title">Dashboard</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-icon">👕</div>
+          <div>
+            <div class="stat-number" id="totalStylesCount">2189</div>
+            <div class="stat-label">Total Styles</div>
+          </div>
+        </div>
+
+        <div class="card export-card">
+          <div class="export-title">Download Export History</div>
+          <div class="export-row">
+            <div class="field">
+              <label>START DATE</label>
+              <input type="date">
+            </div>
+            <div class="field">
+              <label>END DATE</label>
+              <input type="date">
+            </div>
+            <button class="btn-download">⬇ Download</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Styles View -->
+      <div id="stylesView">
+        <div class="card page-header">
+          <h1>Styles</h1>
+          <div class="page-header-actions">
+            <button class="btn-accent" id="addNewStyleBtn">+ Add new style</button>
+            <button class="btn-dark-outline">☰ Manage Status</button>
+          </div>
+        </div>
+
+        <div class="card search-card">
+          <h3>Search</h3>
+          <label>Style number</label>
+          <input type="text" id="styleSearchInput" placeholder="Type a style number...">
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <h3>All Styles</h3>
+            <div class="show-entries">
+              Show
+              <select>
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+              </select>
+              entries
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>S.NO</th>
+                  <th>STYLE</th>
+                  <th>IMAGE</th>
+                  <th>FABRIC (ALL DETAILS)</th>
+                  <th>WSP</th>
+                  <th>QTY IN-HAND</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="stylesTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Samples View -->
+      <div id="samplesView">
+        <div class="card page-header">
+          <h1>Request Samples</h1>
+          <div class="page-header-actions">
+            <button class="btn-accent" id="addNewSampleBtn">+ Request Sample</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <h3>All Sample Requests</h3>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>S.NO</th>
+                  <th>DATE &amp; TIME</th>
+                  <th>STYLE / SIZE</th>
+                  <th>REQUESTED BY</th>
+                  <th>QTY</th>
+                  <th>INVOICE NO</th>
+                  <th>STATUS</th>
+                  <th>RETURNED</th>
+                  <th>COMMENT</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="samplesTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Sheet View -->
+      <div id="costSheetView">
+        <div class="card page-header">
+          <h1>Cost Sheet</h1>
+        </div>
+        <div class="card table-card">
+          <div class="table-card-head"><h3>All Styles — Costing</h3></div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>STYLE</th>
+                  <th>BOM ITEMS</th>
+                  <th>WSP</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="costSheetTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOM View -->
+      <div id="bomView">
+        <div class="card page-header">
+          <h1>Bill of Materials</h1>
+          <div class="page-header-actions">
+            <button class="btn-accent" id="addNewBomBtn">+ Add New</button>
+          </div>
+        </div>
+        <div class="card table-card">
+          <div class="table-card-head"><h3>All Styles — BOM</h3></div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>STYLE</th>
+                  <th>FABRIC ITEMS</th>
+                  <th>ACCESSORY ITEMS</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="bomTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOM Detail View (Style Detail + Fabric + Accessories) -->
+      <div id="bomDetailView">
+        <div class="card page-header" style="align-items:flex-start;">
+          <div>
+            <button class="btn-cancel" id="bomBackBtn" style="margin-bottom:10px;">‹ Back to BOM list</button>
+            <div class="hint" style="text-transform:uppercase;font-size:9.5px;letter-spacing:.4px;">Style Detail</div>
+            <h1 id="bomDetailStyleNumber" style="color:#1f9254;">—</h1>
+          </div>
+          <img id="bomDetailStyleImage" style="width:64px;height:64px;border-radius:10px;object-fit:cover;display:none;">
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <h3>Fabric</h3>
+            <button class="btn-cancel" id="fabricAddRowBtn">+ Add Row</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>S.NO.</th><th>ITEM NAME</th><th>COLOR</th><th>AVERAGE QTY</th>
+                  <th>PRODUCTION WASTAGE %</th><th>QTY CONSUMED PER UNIT</th><th>UOM</th><th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="fabricRowsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <h3>Accessories</h3>
+            <button class="btn-cancel" id="accessoryAddRowBtn">+ Add Row</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>S.NO.</th><th>ITEM NAME</th><th>COLOR</th><th>AVERAGE QTY</th>
+                  <th>PRODUCTION WASTAGE %</th><th>QTY CONSUMED PER UNIT</th><th>UOM</th><th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="accessoryRowsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="padding:16px;display:flex;justify-content:flex-end;">
+          <button class="btn-accent" id="bomDetailSaveBtn">Save BOM</button>
+        </div>
+      </div>
+
+      <!-- Master View (generic, reused for Color/Fabric/Size/Unit/Item Category) -->
+      <div id="masterView">
+        <div class="card page-header">
+          <h1 id="masterViewTitle">Color Master</h1>
+          <div class="page-header-actions">
+            <button class="btn-accent" id="addMasterItemBtn">+ Add</button>
+          </div>
+        </div>
+        <div class="card table-card">
+          <div class="table-card-head"><h3 id="masterViewSubtitle">All Colors</h3></div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr id="masterTableHead"><th>NAME</th><th>ACTION</th></tr>
+              </thead>
+              <tbody id="masterTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Return Management Detail View -->
+      <div id="returnDetailView">
+        <div class="card page-header" style="flex-wrap:wrap;">
+          <h1 id="returnDetailTitle">Return Not Received</h1>
+          <div class="page-header-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="returnSearchInput" placeholder="Search..." style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px;">
+            <button class="btn-cancel" id="returnFilterBtn">Filter</button>
+            <label class="btn-cancel" style="cursor:pointer;margin:0;">
+              ⬆ Upload Bulk Ticket
+              <input type="file" id="returnBulkTicketInput" accept=".csv" style="display:none;">
+            </label>
+            <label class="btn-accent" style="cursor:pointer;margin:0;">
+              + Import CSV
+              <input type="file" id="returnImportCsvInput" accept=".csv" style="display:none;">
+            </label>
+            <button class="btn-accent" id="returnDownloadCsvBtn">⬇ Download CSV</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;">
+              Show
+              <select id="returnShowEntries" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="99999">All</option>
+              </select>
+              entries
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>SELLER SKU</th>
+                  <th>RETURN TYPE</th>
+                  <th>SELLER ORDER ID</th>
+                  <th>RETURN CREATED DATE</th>
+                  <th>ORDER LINE ID</th>
+                  <th>AGEING</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="returnTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket Management View -->
+      <div id="ticketMgmtView">
+        <div class="card page-header" style="flex-wrap:wrap;">
+          <h1 id="ticketMgmtTitle">Myntra Tickets</h1>
+          <div class="page-header-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="ticketSearchInput" placeholder="Search..." style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px;">
+            <button class="btn-cancel" id="ticketFilterBtn">Filter</button>
+            <label class="btn-cancel" style="cursor:pointer;margin:0;">
+              ⬆ Update Ticket Status
+              <input type="file" id="ticketUpdateStatusInput" accept=".csv" style="display:none;">
+            </label>
+            <button class="btn-accent" id="ticketDownloadCurrentBtn">⬇ Download CSV Current Tickets</button>
+            <button class="btn-accent" id="ticketDownloadAllBtn">⬇ Download CSV All Tickets</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card-head">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;">
+              Show
+              <select id="ticketShowEntries" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="99999">All</option>
+              </select>
+              entries
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="styles-table">
+              <thead>
+                <tr>
+                  <th>TICKET CREATE DATE</th>
+                  <th>TICKET ID</th>
+                  <th>MARKETPLACE</th>
+                  <th>SELLER SKU</th>
+                  <th>SELLER ORDER ID</th>
+                  <th>TICKET AGEING</th>
+                  <th>TICKET REASON</th>
+                  <th>TICKET STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="ticketTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Add / Edit Style Modal -->
+  <div class="modal-overlay" id="styleModalOverlay">
+    <div class="modal-box">
+      <div class="modal-title" id="styleModalTitle">Add New Style</div>
+      <form id="styleForm" novalidate>
+        <input type="hidden" id="styleId">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>STYLE NUMBER *</label>
+            <input type="text" id="fStyleNumber" placeholder="e.g. DDCS-1513">
+            <span class="req-error" id="errStyleNumber">Style number is required.</span>
+          </div>
+          <div class="form-field">
+            <label>CATEGORY</label>
+            <select id="fCategory">
+              <option>Womens Wear</option>
+              <option>Mens Wear</option>
+              <option>Kids Wear</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>TYPE</label>
+            <input type="text" id="fType" placeholder="e.g. Coord Set">
+          </div>
+          <div class="form-field">
+            <label>C/C#</label>
+            <input type="text" id="fCC" placeholder="e.g. null">
+          </div>
+          <div class="form-field">
+            <label>LISTING</label>
+            <select id="fListing">
+              <option>Offline</option>
+              <option>Online</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>STATUS</label>
+            <select id="fStatus">
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>WSP (₹) *</label>
+            <input type="number" id="fWsp" placeholder="e.g. 1450">
+            <span class="req-error" id="errWsp">Enter a valid WSP amount.</span>
+          </div>
+          <div class="form-field full">
+            <label>FABRIC (ALL DETAILS)</label>
+            <textarea id="fFabric" rows="2" placeholder="e.g. Woven, Vichitra, Sakhiya Crepe"></textarea>
+          </div>
+          <div class="form-field full">
+            <label>STYLE IMAGE</label>
+            <input type="file" id="fImage" accept="image/*">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn-accent">Save Style</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Inventory Modal -->
+  <div class="modal-overlay" id="inventoryModalOverlay">
+    <div class="modal-box" style="max-width:380px;">
+      <div class="modal-title" id="inventoryModalTitle">Edit Inventory</div>
+      <form id="inventoryForm" novalidate>
+        <input type="hidden" id="invStyleId">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>S</label>
+            <input type="number" id="invS" min="0" placeholder="0">
+          </div>
+          <div class="form-field">
+            <label>M</label>
+            <input type="number" id="invM" min="0" placeholder="0">
+          </div>
+          <div class="form-field">
+            <label>L</label>
+            <input type="number" id="invL" min="0" placeholder="0">
+          </div>
+          <div class="form-field">
+            <label>XL</label>
+            <input type="number" id="invXL" min="0" placeholder="0">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelInventoryBtn">Cancel</button>
+          <button type="submit" class="btn-accent">Save Inventory</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Request Sample Modal -->
+  <div class="modal-overlay" id="sampleModalOverlay">
+    <div class="modal-box">
+      <div class="modal-title">Request Sample</div>
+      <form id="sampleForm" novalidate>
+        <div class="form-grid">
+          <div class="form-field full">
+            <label>STYLE NUMBER *</label>
+            <select id="rsStyle">
+              <option value="">Select style...</option>
+            </select>
+            <span class="req-error" id="errRsStyle">Style select karna zaroori hai.</span>
+          </div>
+          <div class="form-field">
+            <label>SIZE *</label>
+            <select id="rsSize" disabled>
+              <option value="">Select style first</option>
+            </select>
+            <span class="req-error" id="errRsSize">Size select karna zaroori hai.</span>
+          </div>
+          <div class="form-field">
+            <label>QUANTITY * <span id="rsAvailHint" style="color:#9a9ea5;font-weight:600;"></span></label>
+            <input type="number" id="rsQty" min="1" placeholder="e.g. 2" disabled>
+            <span class="req-error" id="errRsQty">Available stock se zyada nahi le sakte.</span>
+          </div>
+          <div class="form-field">
+            <label>REQUESTED BY *</label>
+            <input type="text" id="rsRequestedBy" placeholder="e.g. Vikas Pal">
+            <span class="req-error" id="errRsRequestedBy">Naam likhna zaroori hai.</span>
+          </div>
+          <div class="form-field">
+            <label>INVOICE NO</label>
+            <input type="text" id="rsInvoice" placeholder="e.g. INVRSW-405">
+          </div>
+          <div class="form-field full">
+            <label>REASON / COMMENT</label>
+            <textarea id="rsComment" rows="2" placeholder="Request kyun daali ja rahi hai..."></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelSampleBtn">Cancel</button>
+          <button type="submit" class="btn-accent">Save Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BOM: Select Style Modal (for Add New) -->
+  <div class="modal-overlay" id="bomSelectStyleModalOverlay">
+    <div class="modal-box" style="max-width:380px;">
+      <div class="modal-title">Select Style</div>
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>STYLE NUMBER *</label>
+          <select id="bomSelectStyleInput">
+            <option value="">Select style...</option>
+          </select>
+          <span class="req-error" id="errBomSelectStyle">Style select karna zaroori hai.</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="bomSelectStyleCancelBtn">Cancel</button>
+        <button type="button" class="btn-accent" id="bomSelectStyleContinueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color Master Modal -->
+  <div class="modal-overlay" id="colorModalOverlay">
+    <div class="modal-box" style="max-width:380px;">
+      <div class="modal-title" id="colorModalTitle">Add Color</div>
+      <input type="hidden" id="colorEditIdx" value="-1">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>COLOR NAME *</label>
+          <input type="text" id="colorNameInput" placeholder="e.g. Navy Blue">
+          <span class="req-error" id="errColorName">Naam likhna zaroori hai.</span>
+        </div>
+        <div class="form-field full">
+          <label>PHOTO</label>
+          <input type="file" id="colorImageInput" accept="image/*">
+          <img id="colorImagePreview" style="display:none;max-width:100%;max-height:120px;margin-top:8px;border-radius:6px;border:1px solid var(--border);">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="colorCancelBtn">Cancel</button>
+        <button type="button" class="btn-accent" id="colorSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fabric Master Modal -->
+  <div class="modal-overlay" id="fabricModalOverlay">
+    <div class="modal-box" style="max-width:380px;">
+      <div class="modal-title" id="fabricModalTitle">Add Fabric</div>
+      <input type="hidden" id="fabricEditIdx" value="-1">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>ITEM CATEGORY *</label>
+          <select id="fabricCategoryInput">
+            <option value="">Select item category...</option>
+          </select>
+          <span class="req-error" id="errFabricCategory">Item category select karo.</span>
+        </div>
+        <div class="form-field full">
+          <label>FABRIC / ITEM NAME *</label>
+          <input type="text" id="fabricNameInput" placeholder="e.g. Rayon">
+          <span class="req-error" id="errFabricName">Naam likhna zaroori hai.</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="fabricCancelBtn">Cancel</button>
+        <button type="button" class="btn-accent" id="fabricSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Token Modal -->
+  <div class="modal-overlay" id="generateTicketModalOverlay">
+    <div class="modal-box" style="max-width:380px;">
+      <div class="modal-title">Generate Token</div>
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>TICKET DATE *</label>
+          <input type="date" id="gtDate">
+          <span class="req-error" id="errGtDate">Date select karna zaroori hai.</span>
+        </div>
+        <div class="form-field full">
+          <label>TICKET ID *</label>
+          <input type="text" id="gtTicketId" placeholder="Enter details">
+          <span class="req-error" id="errGtTicketId">Ticket ID likhna zaroori hai.</span>
+        </div>
+        <div class="form-field full">
+          <label>TICKET REASON *</label>
+          <select id="gtReason">
+            <option value="">Select reason...</option>
+            <option>Damaged</option>
+            <option>Used</option>
+            <option>Stained Return</option>
+            <option>Partial Return</option>
+            <option>Wrong Product Received</option>
+            <option>Empty Parcel</option>
+            <option>Fake Product Received</option>
+            <option>Return Not Received</option>
+          </select>
+          <span class="req-error" id="errGtReason">Reason select karna zaroori hai.</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="gtCancelBtn">Cancel</button>
+        <button type="button" class="btn-accent" id="gtGenerateBtn">Generate Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  </div><!-- /#app -->
+
+  <script>
+    const loginScreen = document.getElementById('loginScreen');
+    const app = document.getElementById('app');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const usernameInput = document.getElementById('loginUsername');
+    const passwordInput = document.getElementById('loginPassword');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+
+    const VALID_USERNAME = 'vikas';
+    const VALID_PASSWORD = 'india';
+
+    function setFieldError(input, errorEl, message){
+      input.classList.add('input-error');
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+    }
+    function clearFieldError(input, errorEl){
+      input.classList.remove('input-error');
+      errorEl.classList.remove('show');
+    }
+
+    // Clear individual field errors as the user starts typing again
+    usernameInput.addEventListener('input', function(){
+      clearFieldError(usernameInput, usernameError);
+      loginError.classList.remove('show');
+    });
+    passwordInput.addEventListener('input', function(){
+      clearFieldError(passwordInput, passwordError);
+      loginError.classList.remove('show');
+    });
+
+    loginForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      loginError.classList.remove('show');
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      let hasError = false;
+
+      if(username === ''){
+        setFieldError(usernameInput, usernameError, 'Username is required.');
+        hasError = true;
+      } else {
+        clearFieldError(usernameInput, usernameError);
+      }
+
+      if(password === ''){
+        setFieldError(passwordInput, passwordError, 'Password is required.');
+        hasError = true;
+      } else {
+        clearFieldError(passwordInput, passwordError);
+      }
+
+      if(hasError) return;
+
+      if(username === VALID_USERNAME && password === VALID_PASSWORD){
+        loginScreen.style.display = 'none';
+        app.style.display = 'block';
+      } else {
+        loginError.textContent = 'Incorrect username or password.';
+        loginError.classList.add('show');
+      }
+    });
+
+    logoutBtn.addEventListener('click', function(){
+      app.style.display = 'none';
+      loginScreen.style.display = 'flex';
+      loginForm.reset();
+      clearFieldError(usernameInput, usernameError);
+      clearFieldError(passwordInput, passwordError);
+      loginError.classList.remove('show');
+    });
+
+    /* ================= Supabase connection ================= */
+    const SUPABASE_URL = 'https://opamtfqwwqdpouxfgwhv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wYW10ZnF3d3FkcG91eGZnd2h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjMzMzMsImV4cCI6MjA5OTU5OTMzM30.l2JlQ0S-QuawUZdKpHWy9D_O3tA2z4AjnIwUo6OMtSw';
+
+    let supabaseClient = null;
+    let supabaseInitError = null;
+    try{
+      if(window.supabase && typeof window.supabase.createClient === 'function'){
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } else {
+        supabaseInitError = 'Supabase library load nahi ho payi. Internet connection check karo.';
+      }
+    }catch(err){
+      supabaseInitError = 'Database se connect nahi ho paya: ' + err.message;
+    }
+
+    // Generic key-value blob storage in Supabase for BOM / Masters / Returns / Tickets
+    async function loadAppData(key){
+      if(!supabaseClient) return null;
+      const { data, error } = await supabaseClient.from('app_data').select('value').eq('key', key).maybeSingle();
+      if(error){ console.error(error); return null; }
+      return data ? data.value : null;
+    }
+    async function saveAppData(key, value){
+      if(!supabaseClient) return;
+      const { error } = await supabaseClient.from('app_data').upsert({ key, value, updated_at: new Date().toISOString() });
+      if(error) console.error(error);
+    }
+
+    /* ================= STYLES PAGE (Supabase) ================= */
+
+    async function loadBomFromStorage(){
+      return await loadAppData('bom_data');
+    }
+    async function saveBomToStorage(data){
+      await saveAppData('bom_data', data);
+    }
+
+    const dashboardView = document.getElementById('dashboardView');
+    const stylesView = document.getElementById('stylesView');
+    const samplesView = document.getElementById('samplesView');
+    const costSheetView = document.getElementById('costSheetView');
+    const bomView = document.getElementById('bomView');
+    const bomDetailView = document.getElementById('bomDetailView');
+    const masterView = document.getElementById('masterView');
+    const returnDetailView = document.getElementById('returnDetailView');
+    const ticketMgmtView = document.getElementById('ticketMgmtView');
+    const navDashboard = document.getElementById('navDashboard');
+    const navStyles = document.getElementById('navStyles');
+    const navSamples = document.getElementById('navSamples');
+    const navCostSheet = document.getElementById('navCostSheet');
+    const navBom = document.getElementById('navBom');
+    const navTicketMgmt = document.getElementById('navTicketMgmt');
+    const toast = document.getElementById('toast');
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 2200);
+    }
+
+    function switchView(view){
+      dashboardView.classList.remove('active');
+      stylesView.classList.remove('active');
+      samplesView.classList.remove('active');
+      costSheetView.classList.remove('active');
+      bomView.classList.remove('active');
+      bomDetailView.classList.remove('active');
+      masterView.classList.remove('active');
+      returnDetailView.classList.remove('active');
+      ticketMgmtView.classList.remove('active');
+      navDashboard.classList.remove('active');
+      navStyles.classList.remove('active');
+      navSamples.classList.remove('active');
+      navCostSheet.classList.remove('active');
+      navBom.classList.remove('active');
+      navTicketMgmt.classList.remove('active');
+      document.querySelectorAll('.master-nav').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.return-nav').forEach(el => el.classList.remove('active'));
+
+      if(view === 'styles'){
+        stylesView.classList.add('active');
+        navStyles.classList.add('active');
+        renderStylesTable();
+      } else if(view === 'samples'){
+        samplesView.classList.add('active');
+        navSamples.classList.add('active');
+        renderSamplesTable();
+      } else if(view === 'costsheet'){
+        costSheetView.classList.add('active');
+        navCostSheet.classList.add('active');
+        renderCostSheetTable();
+      } else if(view === 'bom'){
+        bomView.classList.add('active');
+        navBom.classList.add('active');
+        renderBomTable();
+      } else if(view === 'bomdetail'){
+        bomDetailView.classList.add('active');
+        navBom.classList.add('active');
+      } else if(view === 'master'){
+        masterView.classList.add('active');
+      } else if(view === 'returndetail'){
+        returnDetailView.classList.add('active');
+      } else if(view === 'ticketmgmt'){
+        ticketMgmtView.classList.add('active');
+        navTicketMgmt.classList.add('active');
+        renderTicketsTable();
+      } else {
+        dashboardView.classList.add('active');
+        navDashboard.classList.add('active');
+      }
+    }
+    navDashboard.addEventListener('click', ()=> switchView('dashboard'));
+    navStyles.addEventListener('click', ()=> switchView('styles'));
+    navSamples.addEventListener('click', ()=> switchView('samples'));
+    navTicketMgmt.addEventListener('click', ()=> switchView('ticketmgmt'));
+    navCostSheet.addEventListener('click', ()=> switchView('costsheet'));
+    navBom.addEventListener('click', ()=> switchView('bom'));
+
+    /* ----- Masters foldable submenu ----- */
+    const mastersSubmenu = document.getElementById('mastersSubmenu');
+    const mastersChevron = document.getElementById('mastersChevron');
+    document.getElementById('navMastersToggle').addEventListener('click', function(){
+      const isOpen = mastersSubmenu.style.display !== 'none';
+      mastersSubmenu.style.display = isOpen ? 'none' : 'block';
+      mastersChevron.classList.toggle('open', !isOpen);
+    });
+
+    /* ----- Return Management foldable submenu ----- */
+    const returnMgmtSubmenu = document.getElementById('returnMgmtSubmenu');
+    const returnMgmtChevron = document.getElementById('returnMgmtChevron');
+    document.getElementById('navReturnMgmtToggle').addEventListener('click', function(){
+      const isOpen = returnMgmtSubmenu.style.display !== 'none';
+      returnMgmtSubmenu.style.display = isOpen ? 'none' : 'block';
+      returnMgmtChevron.classList.toggle('open', !isOpen);
+    });
+
+    const MASTER_LABELS = {
+      color: { title: 'Color Master', subtitle: 'All Colors' },
+      fabric: { title: 'Fabric Master', subtitle: 'All Fabrics' },
+      size: { title: 'Size Master', subtitle: 'All Sizes' },
+      unit: { title: 'Unit Master', subtitle: 'All Units' },
+      itemcategory: { title: 'Item Category Master', subtitle: 'All Item Categories' }
+    };
+    let currentMasterType = null;
+    let mastersAllData = null;
+
+    document.querySelectorAll('.master-nav').forEach(el => {
+      el.addEventListener('click', async function(){
+        currentMasterType = this.dataset.master;
+        document.querySelectorAll('.master-nav').forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('masterViewTitle').textContent = MASTER_LABELS[currentMasterType].title;
+        document.getElementById('masterViewSubtitle').textContent = MASTER_LABELS[currentMasterType].subtitle;
+        switchView('master');
+        await ensureMastersLoaded();
+        renderMasterTable();
+      });
+    });
+
+    async function loadMastersFromStorage(){
+      return await loadAppData('masters_data');
+    }
+    async function saveMastersToStorage(data){
+      await saveAppData('masters_data', data);
+    }
+
+    async function ensureMastersLoaded(){
+      if(mastersAllData !== null) return;
+      const stored = await loadMastersFromStorage();
+      mastersAllData = stored || {
+        color: [{ name: 'Black', image: '' }, { name: 'White', image: '' }, { name: 'Red', image: '' }],
+        fabric: [{ category: 'Dress', name: 'Rayon' }, { category: 'Co-ord Set', name: 'Cotton' }],
+        size: ['S', 'M', 'L', 'XL'],
+        unit: ['Mtr', 'Pcs', 'Kg'],
+        itemcategory: ['Dress', 'Co-ord Set', 'Top']
+      };
+      await saveMastersToStorage(mastersAllData);
+    }
+
+    // ----- Usage check: prevents editing/deleting a master value that's already used elsewhere -----
+    function allBomRows(){
+      const rows = [];
+      Object.values(bomAllData || {}).forEach(entry => {
+        (entry.fabric || []).forEach(r => rows.push(r));
+        (entry.accessories || []).forEach(r => rows.push(r));
+      });
+      return rows;
+    }
+
+    function isMasterInUse(type, entry){
+      if(type === 'fabric'){
+        const name = (entry.name || '').toLowerCase();
+        const usedInStyle = stylesData.some(s => (s.fabric || '').toLowerCase().includes(name));
+        const usedInBom = allBomRows().some(r => (r.itemName||'').toLowerCase().includes(name));
+        return usedInStyle || usedInBom;
+      }
+      if(type === 'itemcategory'){
+        return stylesData.some(s => (s.category || '').toLowerCase() === (entry||'').toLowerCase());
+      }
+      if(type === 'unit'){
+        return allBomRows().some(r => (r.uom||'').toLowerCase() === (entry||'').toLowerCase());
+      }
+      if(type === 'size'){
+        const map = { S:'qty_s', M:'qty_m', L:'qty_l', XL:'qty_xl' };
+        const field = map[entry];
+        if(!field) return false;
+        return stylesData.some(s => (Number(s[field]) || 0) > 0);
+      }
+      if(type === 'color'){
+        const name = (entry.name || '').toLowerCase();
+        return allBomRows().some(r => (r.color||'').toLowerCase().includes(name));
+      }
+      return false;
+    }
+
+    async function renderMasterTable(){
+      const tbody = document.getElementById('masterTableBody');
+      const thead = document.getElementById('masterTableHead');
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Loading...</td></tr>';
+
+      if(stylesData.length === 0){
+        const result = await fetchStyles();
+        stylesData = result;
+      }
+      if(Object.keys(bomAllData).length === 0){
+        const stored = await loadBomFromStorage();
+        bomAllData = stored || {};
+      }
+
+      const list = mastersAllData[currentMasterType] || [];
+
+      if(currentMasterType === 'color'){
+        thead.innerHTML = '<th>PHOTO</th><th>NAME</th><th>ACTION</th>';
+      } else if(currentMasterType === 'fabric'){
+        thead.innerHTML = '<th>ITEM CATEGORY</th><th>FABRIC / ITEM NAME</th><th>ACTION</th>';
+      } else {
+        thead.innerHTML = '<th>NAME</th><th>ACTION</th>';
+      }
+
+      tbody.innerHTML = '';
+      if(list.length === 0){
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="3">Koi entry nahi hai.</td></tr>`;
+        return;
+      }
+
+      list.forEach((entry, idx) => {
+        const inUse = isMasterInUse(currentMasterType, entry);
+        const actionCell = inUse
+          ? `<span class="hint" title="Ye kahi use ho raha hai, isliye edit/delete nahi ho sakta">🔒 In use</span>`
+          : `<button class="act-btn act-edit" data-idx="${idx}" data-action="editmaster">✏ Edit</button>
+             <button class="act-btn act-delete" data-idx="${idx}" data-action="delmaster">🗑 Delete</button>`;
+
+        const tr = document.createElement('tr');
+        if(currentMasterType === 'color'){
+          tr.innerHTML = `
+            <td>${entry.image ? `<img src="${entry.image}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">` : '<span class="hint">No photo</span>'}</td>
+            <td>${entry.name}</td>
+            <td>${actionCell}</td>
+          `;
+        } else if(currentMasterType === 'fabric'){
+          tr.innerHTML = `
+            <td>${entry.category}</td>
+            <td>${entry.name}</td>
+            <td>${actionCell}</td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td>${entry}</td>
+            <td>${actionCell}</td>
+          `;
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('addMasterItemBtn').addEventListener('click', async function(){
+      if(currentMasterType === 'color'){
+        openColorModal(-1);
+      } else if(currentMasterType === 'fabric'){
+        openFabricModal(-1);
+      } else {
+        const name = prompt('Naya ' + MASTER_LABELS[currentMasterType].title.replace(' Master','') + ' naam likho:');
+        if(!name || !name.trim()) return;
+        if(!mastersAllData[currentMasterType]) mastersAllData[currentMasterType] = [];
+        mastersAllData[currentMasterType].push(name.trim());
+        await saveMastersToStorage(mastersAllData);
+        renderMasterTable();
+        showToast('Add ho gaya.');
+      }
+    });
+
+    document.getElementById('masterTableBody').addEventListener('click', async function(e){
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const idx = Number(btn.dataset.idx);
+      const list = mastersAllData[currentMasterType];
+
+      if(btn.dataset.action === 'editmaster'){
+        if(currentMasterType === 'color'){
+          openColorModal(idx);
+        } else if(currentMasterType === 'fabric'){
+          openFabricModal(idx);
+        } else {
+          const newName = prompt('Naam edit karo:', list[idx]);
+          if(newName === null || !newName.trim()) return;
+          list[idx] = newName.trim();
+          await saveMastersToStorage(mastersAllData);
+          renderMasterTable();
+          showToast('Update ho gaya.');
+        }
+      } else if(btn.dataset.action === 'delmaster'){
+        if(isMasterInUse(currentMasterType, list[idx])){
+          showToast('Ye entry use ho rahi hai, delete nahi ho sakti.');
+          return;
+        }
+        if(confirm('Delete karna hai?')){
+          list.splice(idx, 1);
+          await saveMastersToStorage(mastersAllData);
+          renderMasterTable();
+          showToast('Delete ho gaya.');
+        }
+      }
+    });
+
+    /* ----- Color Master modal ----- */
+    const colorModalOverlay = document.getElementById('colorModalOverlay');
+    const colorNameInput = document.getElementById('colorNameInput');
+    const colorImageInput = document.getElementById('colorImageInput');
+    const colorImagePreview = document.getElementById('colorImagePreview');
+    const colorEditIdx = document.getElementById('colorEditIdx');
+    let pendingColorImage = '';
+
+    function openColorModal(idx){
+      colorEditIdx.value = idx;
+      document.getElementById('colorModalTitle').textContent = idx === -1 ? 'Add Color' : 'Edit Color';
+      document.getElementById('errColorName').classList.remove('show');
+      colorNameInput.classList.remove('input-error');
+      if(idx === -1){
+        colorNameInput.value = '';
+        pendingColorImage = '';
+        colorImagePreview.style.display = 'none';
+      } else {
+        const entry = mastersAllData.color[idx];
+        colorNameInput.value = entry.name;
+        pendingColorImage = entry.image || '';
+        if(pendingColorImage){
+          colorImagePreview.src = pendingColorImage;
+          colorImagePreview.style.display = 'block';
+        } else {
+          colorImagePreview.style.display = 'none';
+        }
+      }
+      colorImageInput.value = '';
+      colorModalOverlay.classList.add('show');
+    }
+    document.getElementById('colorCancelBtn').addEventListener('click', ()=> colorModalOverlay.classList.remove('show'));
+    colorModalOverlay.addEventListener('click', e=>{ if(e.target===colorModalOverlay) colorModalOverlay.classList.remove('show'); });
+
+    colorImageInput.addEventListener('change', function(){
+      const file = this.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        pendingColorImage = ev.target.result;
+        colorImagePreview.src = pendingColorImage;
+        colorImagePreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('colorSaveBtn').addEventListener('click', async function(){
+      const name = colorNameInput.value.trim();
+      if(!name){
+        colorNameInput.classList.add('input-error');
+        document.getElementById('errColorName').classList.add('show');
+        return;
+      }
+      colorNameInput.classList.remove('input-error');
+      document.getElementById('errColorName').classList.remove('show');
+
+      const idx = Number(colorEditIdx.value);
+      const entry = { name, image: pendingColorImage };
+      if(idx === -1){
+        mastersAllData.color.push(entry);
+      } else {
+        mastersAllData.color[idx] = entry;
+      }
+      await saveMastersToStorage(mastersAllData);
+      colorModalOverlay.classList.remove('show');
+      renderMasterTable();
+      showToast(idx === -1 ? 'Color add ho gaya.' : 'Color update ho gaya.');
+    });
+
+    /* ----- Fabric Master modal ----- */
+    const fabricModalOverlay = document.getElementById('fabricModalOverlay');
+    const fabricCategoryInput = document.getElementById('fabricCategoryInput');
+    const fabricNameInput = document.getElementById('fabricNameInput');
+    const fabricEditIdx = document.getElementById('fabricEditIdx');
+
+    function openFabricModal(idx){
+      fabricEditIdx.value = idx;
+      document.getElementById('fabricModalTitle').textContent = idx === -1 ? 'Add Fabric' : 'Edit Fabric';
+      document.getElementById('errFabricCategory').classList.remove('show');
+      document.getElementById('errFabricName').classList.remove('show');
+      fabricCategoryInput.classList.remove('input-error');
+      fabricNameInput.classList.remove('input-error');
+
+      const categories = mastersAllData.itemcategory || [];
+      fabricCategoryInput.innerHTML = '<option value="">Select item category...</option>' +
+        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      if(idx === -1){
+        fabricCategoryInput.value = '';
+        fabricNameInput.value = '';
+      } else {
+        const entry = mastersAllData.fabric[idx];
+        fabricCategoryInput.value = entry.category;
+        fabricNameInput.value = entry.name;
+      }
+      fabricModalOverlay.classList.add('show');
+    }
+    document.getElementById('fabricCancelBtn').addEventListener('click', ()=> fabricModalOverlay.classList.remove('show'));
+    fabricModalOverlay.addEventListener('click', e=>{ if(e.target===fabricModalOverlay) fabricModalOverlay.classList.remove('show'); });
+
+    document.getElementById('fabricSaveBtn').addEventListener('click', async function(){
+      let hasError = false;
+      if(!fabricCategoryInput.value){
+        fabricCategoryInput.classList.add('input-error');
+        document.getElementById('errFabricCategory').classList.add('show');
+        hasError = true;
+      } else {
+        fabricCategoryInput.classList.remove('input-error');
+        document.getElementById('errFabricCategory').classList.remove('show');
+      }
+      const name = fabricNameInput.value.trim();
+      if(!name){
+        fabricNameInput.classList.add('input-error');
+        document.getElementById('errFabricName').classList.add('show');
+        hasError = true;
+      } else {
+        fabricNameInput.classList.remove('input-error');
+        document.getElementById('errFabricName').classList.remove('show');
+      }
+      if(hasError) return;
+
+      const idx = Number(fabricEditIdx.value);
+      const entry = { category: fabricCategoryInput.value, name };
+      if(idx === -1){
+        mastersAllData.fabric.push(entry);
+      } else {
+        mastersAllData.fabric[idx] = entry;
+      }
+      await saveMastersToStorage(mastersAllData);
+      fabricModalOverlay.classList.remove('show');
+      renderMasterTable();
+      showToast(idx === -1 ? 'Fabric add ho gaya.' : 'Fabric update ho gaya.');
+    });
+
+    // ----- Data helpers (Supabase) -----
+    let stylesData = [];
+
+
+    async function fetchStyles(){
+      if(!supabaseClient) return null;
+      const { data, error } = await supabaseClient
+        .from('styles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if(error){
+        console.error(error);
+        showToast('Data load karne mein error aaya.');
+        return [];
+      }
+      return data;
+    }
+
+    function updateTotalCount(){
+      const totalEl = document.getElementById('totalStylesCount');
+      if(totalEl) totalEl.textContent = stylesData.length;
+    }
+
+    async function renderStylesTable(filter){
+      const tbody = document.getElementById('stylesTableBody');
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Loading...</td></tr>';
+
+      const result = await fetchStyles();
+      if(result === null){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">⚠ ' + supabaseInitError + ' Page ko reload karke phir try karo.</td></tr>';
+        return;
+      }
+      stylesData = result;
+      updateTotalCount();
+
+      const q = (filter || '').trim().toLowerCase();
+      const filtered = stylesData.filter(s => (s.style_number || '').toLowerCase().includes(q));
+
+      tbody.innerHTML = '';
+      if(filtered.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No styles found.</td></tr>';
+        return;
+      }
+
+      filtered.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        const statusClass = s.status === 'Active' ? 'status-active' : 'status-inactive';
+        const imgHtml = s.image
+          ? `<img class="style-img" src="${s.image}" alt="${s.style_number}">`
+          : `<div class="style-img">No Image</div>`;
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td class="style-cell">
+            <span class="snum">${s.style_number}</span>
+            <span class="cat">${s.category || ''}</span>
+            <span class="meta">${s.type || ''}</span>
+            <span class="meta">C/C#: ${s.cc || 'null'}</span>
+            <span class="meta">${s.listing || ''}</span>
+            <span class="${statusClass}">${s.status || ''}</span>
+          </td>
+          <td>${imgHtml}</td>
+          <td class="fabric-cell">${s.fabric || ''}</td>
+          <td>${s.wsp}</td>
+          <td class="qty-cell">
+            <span>S: ${s.qty_s || 0}</span>
+            <span>M: ${s.qty_m || 0}</span>
+            <span>L: ${s.qty_l || 0}</span>
+            <span>XL: ${s.qty_xl || 0}</span>
+          </td>
+          <td>
+            <div class="action-cell">
+              <button class="act-btn act-edit" data-id="${s.id}" data-action="edit">✏ Edit</button>
+              <button class="act-btn act-inventory" data-id="${s.id}" data-action="inventory">📦 Inventory</button>
+              <button class="act-btn act-cost" data-action="static">Cost sheet</button>
+              <button class="act-btn act-detail" data-action="static">📤 Detail sheet</button>
+              <button class="act-btn act-images" data-action="static">⬆ All images</button>
+              <button class="act-btn act-videos" data-action="static">⬆ All videos</button>
+              <button class="act-btn act-delete" data-id="${s.id}" data-action="delete">🗑 Delete</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('stylesTableBody').addEventListener('click', async function(e){
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if(action === 'edit'){
+        openStyleModal(id);
+      } else if(action === 'inventory'){
+        openInventoryModal(id);
+      } else if(action === 'delete'){
+        if(confirm('Is style ko delete karna hai?')){
+          const { error } = await supabaseClient.from('styles').delete().eq('id', id);
+          if(error){
+            showToast('Delete karne mein error aaya.');
+          } else {
+            showToast('Style delete ho gayi.');
+            renderStylesTable(document.getElementById('styleSearchInput').value);
+          }
+        }
+      } else if(action === 'static'){
+        showToast('Ye feature abhi demo mein available nahi hai.');
+      }
+    });
+
+    document.getElementById('styleSearchInput').addEventListener('input', function(){
+      renderStylesTable(this.value);
+    });
+
+    // ----- Modal -----
+    const styleModalOverlay = document.getElementById('styleModalOverlay');
+    const styleModalTitle = document.getElementById('styleModalTitle');
+    const styleForm = document.getElementById('styleForm');
+    const styleIdInput = document.getElementById('styleId');
+    const fStyleNumber = document.getElementById('fStyleNumber');
+    const fCategory = document.getElementById('fCategory');
+    const fType = document.getElementById('fType');
+    const fCC = document.getElementById('fCC');
+    const fListing = document.getElementById('fListing');
+    const fStatus = document.getElementById('fStatus');
+    const fWsp = document.getElementById('fWsp');
+    const fFabric = document.getElementById('fFabric');
+    const fImage = document.getElementById('fImage');
+    const errStyleNumber = document.getElementById('errStyleNumber');
+    const errWsp = document.getElementById('errWsp');
+
+    let pendingImageData = '';
+
+    function openStyleModal(editId){
+      styleForm.reset();
+      pendingImageData = '';
+      errStyleNumber.classList.remove('show');
+      errWsp.classList.remove('show');
+      fStyleNumber.classList.remove('input-error');
+      fWsp.classList.remove('input-error');
+
+      if(editId){
+        const s = stylesData.find(x => x.id === editId);
+        if(s){
+          styleModalTitle.textContent = 'Edit Style';
+          styleIdInput.value = s.id;
+          fStyleNumber.value = s.style_number;
+          fCategory.value = s.category;
+          fType.value = s.type;
+          fCC.value = s.cc;
+          fListing.value = s.listing;
+          fStatus.value = s.status;
+          fWsp.value = s.wsp;
+          fFabric.value = s.fabric;
+          pendingImageData = s.image || '';
+        }
+      } else {
+        styleModalTitle.textContent = 'Add New Style';
+        styleIdInput.value = '';
+      }
+      styleModalOverlay.classList.add('show');
+    }
+
+    function closeStyleModal(){
+      styleModalOverlay.classList.remove('show');
+    }
+
+    document.getElementById('addNewStyleBtn').addEventListener('click', ()=> openStyleModal(null));
+    document.getElementById('cancelModalBtn').addEventListener('click', closeStyleModal);
+    styleModalOverlay.addEventListener('click', function(e){
+      if(e.target === styleModalOverlay) closeStyleModal();
+    });
+
+    fImage.addEventListener('change', function(){
+      const file = this.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e){
+        pendingImageData = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    styleForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+
+      let hasError = false;
+      if(fStyleNumber.value.trim() === ''){
+        fStyleNumber.classList.add('input-error');
+        errStyleNumber.classList.add('show');
+        hasError = true;
+      } else {
+        fStyleNumber.classList.remove('input-error');
+        errStyleNumber.classList.remove('show');
+      }
+      if(fWsp.value === '' || isNaN(fWsp.value) || Number(fWsp.value) < 0){
+        fWsp.classList.add('input-error');
+        errWsp.classList.add('show');
+        hasError = true;
+      } else {
+        fWsp.classList.remove('input-error');
+        errWsp.classList.remove('show');
+      }
+      if(hasError) return;
+
+      const editId = styleIdInput.value;
+      const styleObj = {
+        style_number: fStyleNumber.value.trim(),
+        category: fCategory.value,
+        type: fType.value.trim(),
+        cc: fCC.value.trim() || 'null',
+        listing: fListing.value,
+        status: fStatus.value,
+        fabric: fFabric.value.trim(),
+        wsp: Number(fWsp.value),
+        image: pendingImageData
+      };
+
+      const submitBtn = styleForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      let error;
+      if(editId){
+        ({ error } = await supabaseClient.from('styles').update(styleObj).eq('id', editId));
+      } else {
+        styleObj.qty_s = 0; styleObj.qty_m = 0; styleObj.qty_l = 0; styleObj.qty_xl = 0;
+        ({ error } = await supabaseClient.from('styles').insert(styleObj));
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Style';
+
+      if(error){
+        console.error(error);
+        showToast('Save karne mein error aaya: ' + error.message);
+        return;
+      }
+
+      showToast(editId ? 'Style update ho gayi.' : 'Style save ho gayi.');
+      closeStyleModal();
+      renderStylesTable(document.getElementById('styleSearchInput').value);
+    });
+
+    // Load total count on initial page load
+    (async function initStyles(){
+      const result = await fetchStyles();
+      if(result !== null){
+        stylesData = result;
+        updateTotalCount();
+      }
+    })();
+
+    /* ===== Inventory Modal ===== */
+    const inventoryModalOverlay = document.getElementById('inventoryModalOverlay');
+    const inventoryForm = document.getElementById('inventoryForm');
+    const invStyleId = document.getElementById('invStyleId');
+    const invS = document.getElementById('invS');
+    const invM = document.getElementById('invM');
+    const invL = document.getElementById('invL');
+    const invXL = document.getElementById('invXL');
+
+    function openInventoryModal(id){
+      const s = stylesData.find(x => x.id === id);
+      if(!s) return;
+      invStyleId.value = s.id;
+      invS.value = s.qty_s || 0;
+      invM.value = s.qty_m || 0;
+      invL.value = s.qty_l || 0;
+      invXL.value = s.qty_xl || 0;
+      inventoryModalOverlay.classList.add('show');
+    }
+    function closeInventoryModal(){
+      inventoryModalOverlay.classList.remove('show');
+    }
+    document.getElementById('cancelInventoryBtn').addEventListener('click', closeInventoryModal);
+    inventoryModalOverlay.addEventListener('click', function(e){
+      if(e.target === inventoryModalOverlay) closeInventoryModal();
+    });
+
+    inventoryForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      const id = invStyleId.value;
+      const updateObj = {
+        qty_s: Math.max(0, Number(invS.value) || 0),
+        qty_m: Math.max(0, Number(invM.value) || 0),
+        qty_l: Math.max(0, Number(invL.value) || 0),
+        qty_xl: Math.max(0, Number(invXL.value) || 0)
+      };
+      const submitBtn = inventoryForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      const { error } = await supabaseClient.from('styles').update(updateObj).eq('id', id);
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Inventory';
+
+      if(error){
+        console.error(error);
+        showToast('Inventory save karne mein error aaya: ' + error.message);
+        return;
+      }
+      showToast('Inventory update ho gayi.');
+      closeInventoryModal();
+      renderStylesTable(document.getElementById('styleSearchInput').value);
+    });
+
+    /* ================= REQUEST SAMPLES (Supabase) ================= */
+    let samplesData = [];
+
+    async function fetchSamples(){
+      if(!supabaseClient) return null;
+      const { data, error } = await supabaseClient
+        .from('sample_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if(error){
+        console.error(error);
+        showToast('Sample requests load karne mein error aaya.');
+        return [];
+      }
+      return data;
+    }
+
+    async function renderSamplesTable(){
+      const tbody = document.getElementById('samplesTableBody');
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">Loading...</td></tr>';
+
+      const result = await fetchSamples();
+      if(result === null){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">⚠ ' + supabaseInitError + '</td></tr>';
+        return;
+      }
+      samplesData = result;
+
+      tbody.innerHTML = '';
+      if(samplesData.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No sample requests found.</td></tr>';
+        return;
+      }
+
+      samplesData.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        const dt = r.created_at ? new Date(r.created_at) : null;
+        const dtStr = dt ? dt.toLocaleDateString('en-GB').split('/').join('-') + ' ' + dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true}) : '';
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${dtStr}</td>
+          <td><strong>${r.style_number}</strong><br><span style="color:#6b6f76;">${r.size}</span></td>
+          <td>${r.requested_by || ''}</td>
+          <td>${r.qty_requested}</td>
+          <td>${r.invoice_no || ''}</td>
+          <td>${r.status || 'Returnable'}</td>
+          <td>${r.qty_returned || 0}</td>
+          <td>${r.comment || ''}</td>
+          <td><button class="act-btn act-edit" data-id="${r.id}" data-action="comment">🗨️</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('samplesTableBody').addEventListener('click', async function(e){
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      if(btn.dataset.action === 'comment'){
+        const r = samplesData.find(x => x.id === btn.dataset.id);
+        if(!r) return;
+        const note = prompt('Comment / note add karo:', r.comment || '');
+        if(note === null) return;
+        const { error } = await supabaseClient.from('sample_requests').update({ comment: note }).eq('id', r.id);
+        if(error){
+          showToast('Comment save karne mein error aaya.');
+        } else {
+          showToast('Comment update ho gaya.');
+          renderSamplesTable();
+        }
+      }
+    });
+
+    /* ----- Request Sample Modal ----- */
+    const sampleModalOverlay = document.getElementById('sampleModalOverlay');
+    const sampleForm = document.getElementById('sampleForm');
+    const rsStyle = document.getElementById('rsStyle');
+    const rsSize = document.getElementById('rsSize');
+    const rsQty = document.getElementById('rsQty');
+    const rsRequestedBy = document.getElementById('rsRequestedBy');
+    const rsInvoice = document.getElementById('rsInvoice');
+    const rsComment = document.getElementById('rsComment');
+    const rsAvailHint = document.getElementById('rsAvailHint');
+    const errRsStyle = document.getElementById('errRsStyle');
+    const errRsSize = document.getElementById('errRsSize');
+    const errRsQty = document.getElementById('errRsQty');
+    const errRsRequestedBy = document.getElementById('errRsRequestedBy');
+
+    const SIZE_FIELD_MAP = { S: 'qty_s', M: 'qty_m', L: 'qty_l', XL: 'qty_xl' };
+
+    async function openSampleModal(){
+      sampleForm.reset();
+      [errRsStyle, errRsSize, errRsQty, errRsRequestedBy].forEach(el => el.classList.remove('show'));
+      [rsStyle, rsSize, rsQty, rsRequestedBy].forEach(el => el.classList.remove('input-error'));
+      rsSize.innerHTML = '<option value="">Select style first</option>';
+      rsSize.disabled = true;
+      rsQty.disabled = true;
+      rsAvailHint.textContent = '';
+
+      if(stylesData.length === 0){
+        const result = await fetchStyles();
+        if(result) stylesData = result;
+      }
+      rsStyle.innerHTML = '<option value="">Select style...</option>' +
+        stylesData.map(s => `<option value="${s.id}">${s.style_number}</option>`).join('');
+
+      sampleModalOverlay.classList.add('show');
+    }
+    function closeSampleModal(){
+      sampleModalOverlay.classList.remove('show');
+    }
+    document.getElementById('addNewSampleBtn').addEventListener('click', openSampleModal);
+    document.getElementById('cancelSampleBtn').addEventListener('click', closeSampleModal);
+    sampleModalOverlay.addEventListener('click', function(e){
+      if(e.target === sampleModalOverlay) closeSampleModal();
+    });
+
+    rsStyle.addEventListener('change', function(){
+      const s = stylesData.find(x => x.id === this.value);
+      rsSize.innerHTML = '<option value="">Select size...</option>';
+      rsQty.value = '';
+      rsQty.disabled = true;
+      rsAvailHint.textContent = '';
+      if(!s){
+        rsSize.disabled = true;
+        return;
+      }
+      Object.keys(SIZE_FIELD_MAP).forEach(sizeLabel => {
+        const avail = Number(s[SIZE_FIELD_MAP[sizeLabel]]) || 0;
+        if(avail > 0){
+          rsSize.innerHTML += `<option value="${sizeLabel}" data-avail="${avail}">${sizeLabel} (Available: ${avail})</option>`;
+        }
+      });
+      rsSize.disabled = false;
+    });
+
+    rsSize.addEventListener('change', function(){
+      const opt = this.options[this.selectedIndex];
+      const avail = opt ? Number(opt.dataset.avail) || 0 : 0;
+      if(avail > 0){
+        rsQty.disabled = false;
+        rsQty.max = avail;
+        rsAvailHint.textContent = '(Available: ' + avail + ')';
+      } else {
+        rsQty.disabled = true;
+        rsAvailHint.textContent = '';
+      }
+      rsQty.value = '';
+    });
+
+    sampleForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      let hasError = false;
+
+      if(!rsStyle.value){
+        rsStyle.classList.add('input-error'); errRsStyle.classList.add('show'); hasError = true;
+      } else { rsStyle.classList.remove('input-error'); errRsStyle.classList.remove('show'); }
+
+      if(!rsSize.value){
+        rsSize.classList.add('input-error'); errRsSize.classList.add('show'); hasError = true;
+      } else { rsSize.classList.remove('input-error'); errRsSize.classList.remove('show'); }
+
+      const opt = rsSize.options[rsSize.selectedIndex];
+      const avail = opt ? Number(opt.dataset.avail) || 0 : 0;
+      const qtyVal = Number(rsQty.value);
+      if(!rsQty.value || qtyVal < 1 || qtyVal > avail){
+        rsQty.classList.add('input-error'); errRsQty.classList.add('show'); hasError = true;
+      } else { rsQty.classList.remove('input-error'); errRsQty.classList.remove('show'); }
+
+      if(rsRequestedBy.value.trim() === ''){
+        rsRequestedBy.classList.add('input-error'); errRsRequestedBy.classList.add('show'); hasError = true;
+      } else { rsRequestedBy.classList.remove('input-error'); errRsRequestedBy.classList.remove('show'); }
+
+      if(hasError) return;
+
+      const s = stylesData.find(x => x.id === rsStyle.value);
+      const reqObj = {
+        style_number: s.style_number,
+        size: rsSize.value,
+        qty_requested: qtyVal,
+        requested_by: rsRequestedBy.value.trim(),
+        invoice_no: rsInvoice.value.trim(),
+        comment: rsComment.value.trim(),
+        status: 'Returnable',
+        qty_returned: 0
+      };
+
+      const submitBtn = sampleForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      const { error } = await supabaseClient.from('sample_requests').insert(reqObj);
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Request';
+
+      if(error){
+        console.error(error);
+        showToast('Save karne mein error aaya: ' + error.message);
+        return;
+      }
+      showToast('Sample request save ho gayi.');
+      closeSampleModal();
+      renderSamplesTable();
+    });
+
+    /* ================= BOM (Bill of Materials) — new style-based flow ================= */
+    let bomAllData = {}; // { styleId: { fabric: [ {itemName,color,avgQty,wastage,qtyConsumed,uom} ], accessories: [ ... ] } }
+    let currentBomStyleId = null;
+
+    async function ensureBomLoaded(){
+      if(Object.keys(bomAllData).length > 0) return;
+      const stored = await loadBomFromStorage();
+      bomAllData = stored || {};
+    }
+
+    function bomEntryFor(styleId){
+      if(!bomAllData[styleId]) bomAllData[styleId] = { fabric: [], accessories: [] };
+      if(!bomAllData[styleId].fabric) bomAllData[styleId].fabric = [];
+      if(!bomAllData[styleId].accessories) bomAllData[styleId].accessories = [];
+      return bomAllData[styleId];
+    }
+
+    function bomColorOptionsHtml(selectedColor){
+      const colors = (mastersAllData && mastersAllData.color) ? mastersAllData.color : [];
+      let html = '<option value="">Select color...</option>';
+      colors.forEach(c => {
+        const sel = (c.name === selectedColor) ? 'selected' : '';
+        html += `<option value="${c.name}" ${sel}>${c.name}</option>`;
+      });
+      return html;
+    }
+
+    function bomFabricItemOptionsHtml(selectedName){
+      const fabrics = (mastersAllData && mastersAllData.fabric) ? mastersAllData.fabric : [];
+      let html = '<option value="">Select fabric item...</option>';
+      fabrics.forEach(f => {
+        const sel = (f.name === selectedName) ? 'selected' : '';
+        html += `<option value="${f.name}" ${sel}>${f.name} (${f.category})</option>`;
+      });
+      return html;
+    }
+
+    function bomRowHtml(row, idx, section){
+      row = row || { itemName:'', color:'', avgQty:'', wastage:'', qtyConsumed:'', uom:'' };
+      const itemNameCell = section === 'fabric'
+        ? `<select class="bom-cell-input bom-itemName">${bomFabricItemOptionsHtml(row.itemName)}</select>`
+        : `<input type="text" class="bom-cell-input bom-itemName" value="${row.itemName || ''}" placeholder="Item name">`;
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${itemNameCell}</td>
+          <td><select class="bom-cell-input bom-color">${bomColorOptionsHtml(row.color)}</select></td>
+          <td><input type="number" step="0.01" class="bom-cell-input bom-avgQty" value="${row.avgQty || ''}" placeholder="0"></td>
+          <td><input type="number" step="0.01" class="bom-cell-input bom-wastage" value="${row.wastage || ''}" placeholder="0"></td>
+          <td><input type="number" step="0.001" class="bom-cell-input bom-qtyConsumed" value="${row.qtyConsumed || ''}" placeholder="0"></td>
+          <td><input type="text" class="bom-cell-input bom-uom" value="${row.uom || ''}" placeholder="Meter/Pcs"></td>
+          <td><button type="button" class="act-btn act-delete bom-row-delete">🗑</button></td>
+        </tr>
+      `;
+    }
+
+    function renumberBomRows(tbody){
+      tbody.querySelectorAll('tr').forEach((tr, i) => {
+        tr.querySelector('td').textContent = i + 1;
+      });
+    }
+
+    function addBomRowHandlers(tbody){
+      tbody.querySelectorAll('.bom-row-delete').forEach(btn => {
+        btn.onclick = function(){
+          btn.closest('tr').remove();
+          renumberBomRows(tbody);
+        };
+      });
+    }
+
+    function renderBomSectionRows(tbody, rows, section){
+      tbody.innerHTML = rows.length === 0
+        ? bomRowHtml(null, 0, section)
+        : rows.map((r, i) => bomRowHtml(r, i, section)).join('');
+      addBomRowHandlers(tbody);
+    }
+
+    function readBomSectionRows(tbody){
+      const rows = [];
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const itemName = tr.querySelector('.bom-itemName').value.trim();
+        const color = tr.querySelector('.bom-color').value.trim();
+        const avgQty = tr.querySelector('.bom-avgQty').value;
+        const wastage = tr.querySelector('.bom-wastage').value;
+        const qtyConsumed = tr.querySelector('.bom-qtyConsumed').value;
+        const uom = tr.querySelector('.bom-uom').value.trim();
+        if(itemName !== ''){
+          rows.push({
+            itemName, color,
+            avgQty: Number(avgQty) || 0,
+            wastage: Number(wastage) || 0,
+            qtyConsumed: Number(qtyConsumed) || 0,
+            uom
+          });
+        }
+      });
+      return rows;
+    }
+
+    const fabricRowsBody = document.getElementById('fabricRowsBody');
+    const accessoryRowsBody = document.getElementById('accessoryRowsBody');
+
+    document.getElementById('fabricAddRowBtn').addEventListener('click', function(){
+      fabricRowsBody.insertAdjacentHTML('beforeend', bomRowHtml(null, fabricRowsBody.children.length, 'fabric'));
+      addBomRowHandlers(fabricRowsBody);
+    });
+    document.getElementById('accessoryAddRowBtn').addEventListener('click', function(){
+      accessoryRowsBody.insertAdjacentHTML('beforeend', bomRowHtml(null, accessoryRowsBody.children.length, 'accessories'));
+      addBomRowHandlers(accessoryRowsBody);
+    });
+
+    async function openBomDetail(styleId){
+      const s = stylesData.find(x => x.id === styleId);
+      if(!s) return;
+      currentBomStyleId = styleId;
+      await ensureBomLoaded();
+      await ensureMastersLoaded();
+      const entry = bomEntryFor(styleId);
+
+      document.getElementById('bomDetailStyleNumber').textContent = s.style_number;
+      const imgEl = document.getElementById('bomDetailStyleImage');
+      if(s.image){
+        imgEl.src = s.image;
+        imgEl.style.display = 'block';
+      } else {
+        imgEl.style.display = 'none';
+      }
+
+      renderBomSectionRows(fabricRowsBody, entry.fabric, 'fabric');
+      renderBomSectionRows(accessoryRowsBody, entry.accessories, 'accessories');
+
+      switchView('bomdetail');
+    }
+
+    document.getElementById('bomBackBtn').addEventListener('click', function(){
+      switchView('bom');
+    });
+
+    document.getElementById('bomDetailSaveBtn').addEventListener('click', async function(){
+      const entry = bomEntryFor(currentBomStyleId);
+      entry.fabric = readBomSectionRows(fabricRowsBody);
+      entry.accessories = readBomSectionRows(accessoryRowsBody);
+
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      await saveBomToStorage(bomAllData);
+      btn.disabled = false;
+      btn.textContent = 'Save BOM';
+
+      showToast('BOM save ho gayi.');
+      renderBomSectionRows(fabricRowsBody, entry.fabric, 'fabric');
+      renderBomSectionRows(accessoryRowsBody, entry.accessories, 'accessories');
+    });
+
+    /* ----- Add New BOM: select style modal ----- */
+    const bomSelectStyleModalOverlay = document.getElementById('bomSelectStyleModalOverlay');
+    const bomSelectStyleInput = document.getElementById('bomSelectStyleInput');
+
+    document.getElementById('addNewBomBtn').addEventListener('click', async function(){
+      if(stylesData.length === 0){
+        const result = await fetchStyles();
+        stylesData = result;
+      }
+      bomSelectStyleInput.innerHTML = '<option value="">Select style...</option>' +
+        stylesData.map(s => `<option value="${s.id}">${s.style_number}</option>`).join('');
+      document.getElementById('errBomSelectStyle').classList.remove('show');
+      bomSelectStyleInput.classList.remove('input-error');
+      bomSelectStyleModalOverlay.classList.add('show');
+    });
+    document.getElementById('bomSelectStyleCancelBtn').addEventListener('click', function(){
+      bomSelectStyleModalOverlay.classList.remove('show');
+    });
+    bomSelectStyleModalOverlay.addEventListener('click', function(e){
+      if(e.target === bomSelectStyleModalOverlay) bomSelectStyleModalOverlay.classList.remove('show');
+    });
+    document.getElementById('bomSelectStyleContinueBtn').addEventListener('click', async function(){
+      if(!bomSelectStyleInput.value){
+        bomSelectStyleInput.classList.add('input-error');
+        document.getElementById('errBomSelectStyle').classList.add('show');
+        return;
+      }
+      bomSelectStyleInput.classList.remove('input-error');
+      document.getElementById('errBomSelectStyle').classList.remove('show');
+      bomSelectStyleModalOverlay.classList.remove('show');
+      await openBomDetail(bomSelectStyleInput.value);
+    });
+
+    /* ================= BOM & Cost Sheet List Pages ================= */
+    async function renderBomTable(){
+      const tbody = document.getElementById('bomTableBody');
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Loading...</td></tr>';
+
+      if(stylesData.length === 0){
+        const result = await fetchStyles();
+        stylesData = result;
+      }
+      await ensureBomLoaded();
+
+      tbody.innerHTML = '';
+      if(stylesData.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Koi style nahi hai. Pehle Styles page se style add karo.</td></tr>';
+        return;
+      }
+      stylesData.forEach(s => {
+        const entry = bomAllData[s.id] || { fabric: [], accessories: [] };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${s.style_number}</strong></td>
+          <td>${(entry.fabric||[]).length}</td>
+          <td>${(entry.accessories||[]).length}</td>
+          <td><button class="act-btn act-inventory" data-id="${s.id}" data-action="editbom">📋 Open BOM</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('bomTableBody').addEventListener('click', function(e){
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      if(btn.dataset.action === 'editbom') openBomDetail(btn.dataset.id);
+    });
+
+    async function renderCostSheetTable(){
+      const tbody = document.getElementById('costSheetTableBody');
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Loading...</td></tr>';
+
+      if(stylesData.length === 0){
+        const result = await fetchStyles();
+        stylesData = result;
+      }
+      await ensureBomLoaded();
+
+      tbody.innerHTML = '';
+      if(stylesData.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Koi style nahi hai. Pehle Styles page se style add karo.</td></tr>';
+        return;
+      }
+      stylesData.forEach(s => {
+        const entry = bomAllData[s.id] || { fabric: [], accessories: [] };
+        const itemCount = (entry.fabric||[]).length + (entry.accessories||[]).length;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${s.style_number}</strong></td>
+          <td>${itemCount} item(s)</td>
+          <td>₹${s.wsp || 0}</td>
+          <td><button class="act-btn act-inventory" data-id="${s.id}" data-action="viewbom">📋 View BOM</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('costSheetTableBody').addEventListener('click', function(e){
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      if(btn.dataset.action === 'viewbom') openBomDetail(btn.dataset.id);
+    });
+
+    /* ================= Return Management ================= */
+    let currentReturnType = null;
+    let returnAllData = null;
+
+    async function loadReturnsFromStorage(){
+      return await loadAppData('returns_data');
+    }
+    async function saveReturnsToStorage(data){
+      await saveAppData('returns_data', data);
+    }
+    async function ensureReturnsLoaded(){
+      if(returnAllData !== null) return;
+      const stored = await loadReturnsFromStorage();
+      returnAllData = stored || {};
+    }
+
+    document.querySelectorAll('.return-nav').forEach(el => {
+      el.addEventListener('click', async function(){
+        currentReturnType = this.dataset.return;
+        document.querySelectorAll('.return-nav').forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('returnDetailTitle').textContent = this.dataset.title;
+        document.getElementById('returnSearchInput').value = '';
+        await ensureReturnsLoaded();
+        switchView('returndetail');
+        renderReturnTable();
+      });
+    });
+
+    function renderReturnTable(){
+      const tbody = document.getElementById('returnTableBody');
+      const searchVal = document.getElementById('returnSearchInput').value.trim().toLowerCase();
+      const limit = Number(document.getElementById('returnShowEntries').value) || 100;
+
+      let rows = returnAllData[currentReturnType] || [];
+      if(searchVal){
+        rows = rows.filter(r =>
+          (r.sellerSku||'').toLowerCase().includes(searchVal) ||
+          (r.sellerOrderId||'').toLowerCase().includes(searchVal) ||
+          (r.orderLineId||'').toLowerCase().includes(searchVal)
+        );
+      }
+      rows = rows.slice(0, limit);
+
+      tbody.innerHTML = '';
+      if(rows.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Koi data nahi hai. "+ Import CSV" se seller return report daalo.</td></tr>';
+        return;
+      }
+      rows.forEach((r) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.sellerSku || ''}</td>
+          <td>${r.returnType || ''}</td>
+          <td>${r.sellerOrderId || ''}</td>
+          <td>${r.returnCreatedDate || ''}</td>
+          <td>${r.orderLineId || ''}</td>
+          <td>${r.returnCreatedDateRaw ? computeAgeing(r.returnCreatedDateRaw) : (r.ageing || '')}</td>
+          <td>
+            ${r.ticketGenerated
+              ? `<span class="hint">✅ Ticket Generated</span>`
+              : `<button class="act-btn act-inventory" data-id="${r.id}" data-action="genticket">Generate Ticket</button>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('returnSearchInput').addEventListener('input', renderReturnTable);
+    document.getElementById('returnShowEntries').addEventListener('change', renderReturnTable);
+    document.getElementById('returnFilterBtn').addEventListener('click', renderReturnTable);
+
+    let pendingTicketSource = null; // { returnType, rowId }
+
+    document.getElementById('returnTableBody').addEventListener('click', function(e){
+      const btn = e.target.closest('button');
+      if(!btn || btn.dataset.action !== 'genticket') return;
+      const rowId = btn.dataset.id;
+      const rows = returnAllData[currentReturnType] || [];
+      const row = rows.find(r => r.id === rowId);
+      if(!row) return;
+      pendingTicketSource = { returnType: currentReturnType, rowId };
+      openGenerateTicketModal();
+    });
+
+    // ----- CSV parsing (simple, handles quoted fields with commas) -----
+    function parseCsv(text){
+      const rows = [];
+      let row = [], field = '', inQuotes = false;
+      for(let i = 0; i < text.length; i++){
+        const c = text[i];
+        if(inQuotes){
+          if(c === '"'){
+            if(text[i+1] === '"'){ field += '"'; i++; }
+            else { inQuotes = false; }
+          } else { field += c; }
+        } else {
+          if(c === '"'){ inQuotes = true; }
+          else if(c === ','){ row.push(field); field = ''; }
+          else if(c === '\n' || c === '\r'){
+            if(c === '\r' && text[i+1] === '\n') i++;
+            row.push(field); field = '';
+            if(row.some(f => f.trim() !== '')) rows.push(row);
+            row = [];
+          } else { field += c; }
+        }
+      }
+      if(field !== '' || row.length){ row.push(field); if(row.some(f=>f.trim()!=='')) rows.push(row); }
+      return rows;
+    }
+
+    // Real Myntra "Seller Returns Report" column names (raw export from Myntra seller panel)
+    const MYNTRA_NRN_HEADER_MAP = {
+      'seller_sku_code': 'sellerSku',
+      'type': 'returnType',
+      'seller_order_id': 'sellerOrderId',
+      'return_created_date': 'returnCreatedDateRaw',
+      'order_line_id': 'orderLineId'
+    };
+
+    function formatDateDMY(isoStr){
+      if(!isoStr) return '';
+      const d = new Date(isoStr);
+      if(isNaN(d)) return isoStr;
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    }
+
+    function computeAgeing(isoStr){
+      if(!isoStr) return '';
+      const created = new Date(isoStr);
+      if(isNaN(created)) return '';
+      created.setHours(0,0,0,0);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const diffDays = Math.round((today - created) / (1000*60*60*24));
+      return diffDays >= 0 ? diffDays : 0;
+    }
+
+    document.getElementById('returnImportCsvInput').addEventListener('change', async function(){
+      const file = this.files[0];
+      if(!file) return;
+
+      if(currentReturnType !== 'myntra-nrn'){
+        showToast('Is page ke liye CSV import format abhi set nahi hai.');
+        this.value = '';
+        return;
+      }
+
+      const text = await file.text();
+      const rows = parseCsv(text);
+      if(rows.length < 2){
+        showToast('CSV mein data nahi mila.');
+        this.value = '';
+        return;
+      }
+      const header = rows[0].map(h => h.trim().toLowerCase());
+      const fieldKeys = header.map(h => MYNTRA_NRN_HEADER_MAP[h] || null);
+
+      const newEntries = [];
+      for(let i = 1; i < rows.length; i++){
+        const cells = rows[i];
+        const entry = { ticketGenerated: false, id: 'ret_' + Date.now() + '_' + i };
+        fieldKeys.forEach((key, colIdx) => {
+          if(key) entry[key] = (cells[colIdx] || '').trim();
+        });
+        if(entry.sellerSku || entry.sellerOrderId){
+          entry.returnCreatedDate = formatDateDMY(entry.returnCreatedDateRaw);
+          newEntries.push(entry);
+        }
+      }
+
+      if(newEntries.length === 0){
+        showToast('CSV format pehchana nahi gaya. Ye Myntra Seller Returns Report jaisi file honi chahiye.');
+        this.value = '';
+        return;
+      }
+
+      if(!returnAllData[currentReturnType]) returnAllData[currentReturnType] = [];
+      returnAllData[currentReturnType] = returnAllData[currentReturnType].concat(newEntries);
+      await saveReturnsToStorage(returnAllData);
+      renderReturnTable();
+      showToast(newEntries.length + ' rows import ho gayi.');
+      this.value = '';
+    });
+
+    document.getElementById('returnBulkTicketInput').addEventListener('change', async function(){
+      const file = this.files[0];
+      if(!file) return;
+      const text = await file.text();
+      const rows = parseCsv(text);
+      if(rows.length < 2){ showToast('CSV mein data nahi mila.'); this.value=''; return; }
+      const header = rows[0].map(h => h.trim().toLowerCase());
+      const orderIdCol = header.indexOf('seller order id');
+      if(orderIdCol === -1){
+        showToast('CSV mein "Seller Order ID" column hona chahiye.');
+        this.value = '';
+        return;
+      }
+      const orderIdsToMark = new Set();
+      for(let i=1; i<rows.length; i++){
+        const val = (rows[i][orderIdCol] || '').trim();
+        if(val) orderIdsToMark.add(val);
+      }
+      const list = returnAllData[currentReturnType] || [];
+      let marked = 0;
+      list.forEach(r => {
+        if(orderIdsToMark.has(r.sellerOrderId)){ r.ticketGenerated = true; marked++; }
+      });
+      await saveReturnsToStorage(returnAllData);
+      renderReturnTable();
+      showToast(marked + ' tickets generate ho gaye.');
+      this.value = '';
+    });
+
+    document.getElementById('returnDownloadCsvBtn').addEventListener('click', function(){
+      const rows = returnAllData[currentReturnType] || [];
+      if(rows.length === 0){ showToast('Download karne ke liye koi data nahi hai.'); return; }
+      const header = ['Seller Sku','Return Type','Seller Order ID','Return Created Date','Order Line ID','Ageing','Ticket Generated'];
+      const csvLines = [header.join(',')];
+      rows.forEach(r => {
+        csvLines.push([
+          r.sellerSku||'', r.returnType||'', r.sellerOrderId||'', r.returnCreatedDate||'',
+          r.orderLineId||'', r.ageing||'', r.ticketGenerated ? 'Yes' : 'No'
+        ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+      });
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (currentReturnType || 'returns') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    /* ================= Generate Token modal ================= */
+    const generateTicketModalOverlay = document.getElementById('generateTicketModalOverlay');
+    const gtDate = document.getElementById('gtDate');
+    const gtTicketId = document.getElementById('gtTicketId');
+    const gtReason = document.getElementById('gtReason');
+
+    function todayIsoDate(){
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function openGenerateTicketModal(){
+      gtDate.value = todayIsoDate();
+      gtTicketId.value = '';
+      gtReason.value = '';
+      ['errGtDate','errGtTicketId','errGtReason'].forEach(id => document.getElementById(id).classList.remove('show'));
+      [gtDate, gtTicketId, gtReason].forEach(el => el.classList.remove('input-error'));
+      generateTicketModalOverlay.classList.add('show');
+    }
+    document.getElementById('gtCancelBtn').addEventListener('click', function(){
+      generateTicketModalOverlay.classList.remove('show');
+      pendingTicketSource = null;
+    });
+    generateTicketModalOverlay.addEventListener('click', function(e){
+      if(e.target === generateTicketModalOverlay){
+        generateTicketModalOverlay.classList.remove('show');
+        pendingTicketSource = null;
+      }
+    });
+
+    document.getElementById('gtGenerateBtn').addEventListener('click', async function(){
+      let hasError = false;
+      const mark = (el, errEl, bad) => {
+        if(bad){ el.classList.add('input-error'); errEl.classList.add('show'); hasError = true; }
+        else { el.classList.remove('input-error'); errEl.classList.remove('show'); }
+      };
+      mark(gtDate, document.getElementById('errGtDate'), !gtDate.value);
+      mark(gtTicketId, document.getElementById('errGtTicketId'), gtTicketId.value.trim() === '');
+      mark(gtReason, document.getElementById('errGtReason'), !gtReason.value);
+      if(hasError || !pendingTicketSource) return;
+
+      const { returnType, rowId } = pendingTicketSource;
+      const rows = returnAllData[returnType] || [];
+      const row = rows.find(r => r.id === rowId);
+      if(!row) return;
+
+      const marketplace = returnType.split('-')[0];
+      const marketplaceLabel = marketplace.charAt(0).toUpperCase() + marketplace.slice(1);
+
+      const ticket = {
+        id: 'tkt_' + Date.now(),
+        ticketCreateDate: gtDate.value,
+        ticketId: gtTicketId.value.trim(),
+        marketplace: marketplaceLabel,
+        sellerSku: row.sellerSku || '',
+        sellerOrderId: row.sellerOrderId || '',
+        ticketReason: gtReason.value,
+        ticketStatus: 'Open'
+      };
+
+      await ensureTicketsLoaded();
+      const key = marketplace;
+      if(!ticketsAllData[key]) ticketsAllData[key] = [];
+      ticketsAllData[key].push(ticket);
+      await saveTicketsToStorage(ticketsAllData);
+
+      row.ticketGenerated = true;
+      row.ticketId = ticket.ticketId;
+      await saveReturnsToStorage(returnAllData);
+
+      generateTicketModalOverlay.classList.remove('show');
+      pendingTicketSource = null;
+      showToast('Ticket generate ho gaya.');
+
+      switchView('ticketmgmt');
+    });
+
+    /* ================= Ticket Management ================= */
+    let ticketsAllData = null;
+    const currentTicketMarketplace = 'myntra'; // only Myntra built for now
+
+    async function loadTicketsFromStorage(){
+      return await loadAppData('tickets_data');
+    }
+    async function saveTicketsToStorage(data){
+      await saveAppData('tickets_data', data);
+    }
+    async function ensureTicketsLoaded(){
+      if(ticketsAllData !== null) return;
+      const stored = await loadTicketsFromStorage();
+      ticketsAllData = stored || {};
+    }
+
+    function computeTicketAgeing(isoDateStr){
+      if(!isoDateStr) return '';
+      const created = new Date(isoDateStr);
+      if(isNaN(created)) return '';
+      created.setHours(0,0,0,0);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const diffDays = Math.round((today - created) / (1000*60*60*24));
+      return diffDays >= 0 ? diffDays : 0;
+    }
+
+    async function renderTicketsTable(){
+      await ensureTicketsLoaded();
+      const tbody = document.getElementById('ticketTableBody');
+      const searchVal = document.getElementById('ticketSearchInput').value.trim().toLowerCase();
+      const limit = Number(document.getElementById('ticketShowEntries').value) || 100;
+
+      let list = ticketsAllData[currentTicketMarketplace] || [];
+      if(searchVal){
+        list = list.filter(t =>
+          (t.ticketId||'').toLowerCase().includes(searchVal) ||
+          (t.sellerSku||'').toLowerCase().includes(searchVal) ||
+          (t.sellerOrderId||'').toLowerCase().includes(searchVal)
+        );
+      }
+      list = list.slice(0, limit);
+
+      tbody.innerHTML = '';
+      if(list.length === 0){
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Koi ticket nahi hai. Return pages se "Generate Ticket" karke yahan bhejo.</td></tr>';
+        return;
+      }
+      list.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDateDMY(t.ticketCreateDate)}</td>
+          <td>${t.ticketId}</td>
+          <td>${t.marketplace}</td>
+          <td>${t.sellerSku}</td>
+          <td>${t.sellerOrderId}</td>
+          <td>${computeTicketAgeing(t.ticketCreateDate)}</td>
+          <td>${t.ticketReason}</td>
+          <td>${t.ticketStatus}</td>
+          <td><button class="act-btn act-inventory" data-id="${t.id}" data-action="updatestatus">Update Ticket</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('ticketSearchInput').addEventListener('input', renderTicketsTable);
+    document.getElementById('ticketShowEntries').addEventListener('change', renderTicketsTable);
+    document.getElementById('ticketFilterBtn').addEventListener('click', renderTicketsTable);
+
+    document.getElementById('ticketTableBody').addEventListener('click', async function(e){
+      const btn = e.target.closest('button');
+      if(!btn || btn.dataset.action !== 'updatestatus') return;
+      const list = ticketsAllData[currentTicketMarketplace] || [];
+      const t = list.find(x => x.id === btn.dataset.id);
+      if(!t) return;
+      const newStatus = prompt('Naya status likho (Open / In Progress / Resolved / Closed):', t.ticketStatus);
+      if(newStatus === null || !newStatus.trim()) return;
+      t.ticketStatus = newStatus.trim();
+      await saveTicketsToStorage(ticketsAllData);
+      renderTicketsTable();
+      showToast('Ticket status update ho gaya.');
+    });
+
+    document.getElementById('ticketUpdateStatusInput').addEventListener('change', async function(){
+      const file = this.files[0];
+      if(!file) return;
+      const text = await file.text();
+      const rows = parseCsv(text);
+      if(rows.length < 2){ showToast('CSV mein data nahi mila.'); this.value=''; return; }
+      const header = rows[0].map(h => h.trim().toLowerCase());
+      const ticketIdCol = header.indexOf('ticket id');
+      const statusCol = header.indexOf('ticket status');
+      if(ticketIdCol === -1 || statusCol === -1){
+        showToast('CSV mein "Ticket ID" aur "Ticket Status" column hone chahiye.');
+        this.value = '';
+        return;
+      }
+      const list = ticketsAllData[currentTicketMarketplace] || [];
+      let updated = 0;
+      for(let i=1; i<rows.length; i++){
+        const tid = (rows[i][ticketIdCol]||'').trim();
+        const status = (rows[i][statusCol]||'').trim();
+        const t = list.find(x => x.ticketId === tid);
+        if(t && status){ t.ticketStatus = status; updated++; }
+      }
+      await saveTicketsToStorage(ticketsAllData);
+      renderTicketsTable();
+      showToast(updated + ' tickets update ho gaye.');
+      this.value = '';
+    });
+
+    function ticketsToCsv(list){
+      const header = ['Ticket Create Date','Ticket ID','Marketplace','Seller Sku','Seller Order ID','Ticket Ageing','Ticket Reason','Ticket Status'];
+      const lines = [header.join(',')];
+      list.forEach(t => {
+        lines.push([
+          formatDateDMY(t.ticketCreateDate), t.ticketId, t.marketplace, t.sellerSku,
+          t.sellerOrderId, computeTicketAgeing(t.ticketCreateDate), t.ticketReason, t.ticketStatus
+        ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+      });
+      return lines.join('\n');
+    }
+    function downloadCsvFile(content, filename){
+      const blob = new Blob([content], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('ticketDownloadCurrentBtn').addEventListener('click', function(){
+      const searchVal = document.getElementById('ticketSearchInput').value.trim().toLowerCase();
+      let list = ticketsAllData[currentTicketMarketplace] || [];
+      if(searchVal){
+        list = list.filter(t =>
+          (t.ticketId||'').toLowerCase().includes(searchVal) ||
+          (t.sellerSku||'').toLowerCase().includes(searchVal) ||
+          (t.sellerOrderId||'').toLowerCase().includes(searchVal)
+        );
+      }
+      if(list.length === 0){ showToast('Download karne ke liye koi data nahi hai.'); return; }
+      downloadCsvFile(ticketsToCsv(list), 'myntra_tickets_current.csv');
+    });
+    document.getElementById('ticketDownloadAllBtn').addEventListener('click', function(){
+      const list = ticketsAllData[currentTicketMarketplace] || [];
+      if(list.length === 0){ showToast('Download karne ke liye koi data nahi hai.'); return; }
+      downloadCsvFile(ticketsToCsv(list), 'myntra_tickets_all.csv');
+    });
+  </script>
+
+</body>
+</html>
